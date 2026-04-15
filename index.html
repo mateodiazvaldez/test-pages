@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- SVG Pan Zoom Library -->
+    <!-- SVG Pan Zoom & Touch events (Hammer.js) -->
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
     <style>
         :root {
             --primary: #1e293b;
@@ -325,6 +326,40 @@
         // Init SVG Pan Zoom instances
         const panZoomInstances = {};
 
+        var eventsHandler = {
+          haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
+          init: function(options) {
+            var instance = options.instance,
+                initialScale = 1, pannedX = 0, pannedY = 0;
+
+            this.hammer = Hammer(options.svgElement, {
+              inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+            });
+            this.hammer.get('pinch').set({enable: true});
+            this.hammer.on('doubletap', function(ev){
+              instance.zoomIn();
+            });
+            this.hammer.on('panstart panmove', function(ev){
+              if (ev.type === 'panstart') {
+                pannedX = 0; pannedY = 0;
+              }
+              instance.panBy({x: ev.deltaX - pannedX, y: ev.deltaY - pannedY});
+              pannedX = ev.deltaX; pannedY = ev.deltaY;
+            });
+            this.hammer.on('pinchstart pinchmove', function(ev){
+              if (ev.type === 'pinchstart') {
+                initialScale = instance.getZoom();
+                instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y});
+              }
+              instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y});
+            });
+            options.svgElement.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive: false});
+          },
+          destroy: function(){
+            this.hammer.destroy();
+          }
+        };
+
         window.onload = function() {
             for(let i=1; i<=5; i++) {
                 let svgElt = document.getElementById('svg-zoom-' + i);
@@ -336,7 +371,8 @@
                         center: true,
                         minZoom: 0.5,
                         maxZoom: 10,
-                        mouseWheelZoomEnabled: true
+                        mouseWheelZoomEnabled: true,
+                        customEventsHandler: eventsHandler
                     });
                 }
             }
