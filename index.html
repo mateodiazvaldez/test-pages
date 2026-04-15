@@ -184,6 +184,38 @@
             background: #f1f5f9;
             color: var(--brand);
         }
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                overflow: auto;
+            }
+            aside {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+                position: relative;
+            }
+            nav {
+                max-height: 250px;
+            }
+            .intro-text {
+                display: none; /* Hide lengthy intro on mobile to save space */
+            }
+            main {
+                padding: 20px;
+                overflow-y: visible;
+            }
+            .section-card {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+            .diagram-wrapper {
+                min-height: 50vh;
+            }
+            .section-card h2 {
+                font-size: 22px;
+            }
+        }
     </style>
 </head>
 <body>
